@@ -1,0 +1,17 @@
+{
+  "name": "Quản Lý Chi Tiêu",
+  "short_name": "Chi Tiêu",
+  "description": "Theo dõi thu chi mỗi ngày, quản lý tài chính thông minh",
+  "start_url": "quan-ly-chi-tieu.html",
+  "display": "standalone",
+  "background_color": "#0a0015",
+  "theme_color": "#7c3aed",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
