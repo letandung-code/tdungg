@@ -64,8 +64,9 @@ body::before {
 }
 
 .control-panel.minimized {
-  transform: translateY(-50%) translateX(44px);
-  opacity: 0.5;
+  transform: translateY(-50%) translateX(calc(100% + 24px));
+  opacity: 0;
+  pointer-events: none;
 }
 
 .control-panel.minimized:hover {
@@ -77,28 +78,24 @@ body::before {
   top: 50%;
   right: 0;
   z-index: 201;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 48px;
   border: none;
   background: linear-gradient(135deg, #0ea5e9, #38bdf8);
   color: white;
-  border-radius: 8px 0 0 8px;
+  border-radius: 10px 0 0 10px;
   cursor: pointer;
-  font-size: 14px;
-  display: none;
+  font-size: 16px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.4s, background 0.2s;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s, right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   line-height: 1;
   box-shadow: -2px 0 10px rgba(14,165,233,0.3);
 }
 
 .cp-toggle-btn:hover {
   background: linear-gradient(135deg, #38bdf8, #7dd3fc);
-}
-
-.cp-toggle-btn.show {
-  display: flex;
 }
 
 .cp-title {
@@ -1187,6 +1184,9 @@ body.dark-mode .quick-add-label {
 
 </div>
 
+<!-- Toggle Button -->
+<button class="cp-toggle-btn" id="cpToggle" title="Ẩn/hiện panel">&#x276E;</button>
+
 <!-- Control Panel -->
 <div class="control-panel" id="controlPanel">
   <div class="cp-title">&#x2699; Control</div>
@@ -1882,6 +1882,13 @@ document.getElementById('cpDarkMode').addEventListener('click', function() {
   if (enabled) { createGalaxyDust(); }
     else { document.getElementById('galaxyDust').innerHTML = ''; }
   showToast(enabled ? 'Đã bật Dark Mode — chào mừng đến vũ trụ!' : 'Đã tắt Dark Mode');
+});
+
+// Toggle control panel
+document.getElementById('cpToggle').addEventListener('click', function() {
+  const panel = document.getElementById('controlPanel');
+  panel.classList.toggle('minimized');
+  this.innerHTML = panel.classList.contains('minimized') ? '&#x276F;' : '&#x276E;';
 });
 
 // Reset data
