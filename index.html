@@ -7,7 +7,8 @@
 <meta http-equiv="expires" content="0">
 <title>Quản Lý Chi Tiêu</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#7c3aed">
+<script src="https://cdn.jsdelivr.net/npm/mathjs@12.4.1/lib/browser/math.js"></script>
+<meta name="theme-color" content="#0ea5e9">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Chi Tiêu">
@@ -21,7 +22,7 @@
 
 body {
   font-family: 'Segoe UI', system-ui, sans-serif;
-  background: linear-gradient(135deg, #f0e6ff 0%, #e0eefe 30%, #f0e0f5 60%, #e6f0ff 100%);
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 15%, #e0f2fe 40%, #c7e9fb 65%, #e0f2fe 85%, #bae6fd 100%);
   min-height: 100vh;
   color: #1e293b;
   overflow-x: hidden;
@@ -33,15 +34,112 @@ body::before {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse at 15% 20%, rgba(180, 130, 255, 0.08) 0%, transparent 45%),
-    radial-gradient(ellipse at 85% 15%, rgba(100, 180, 255, 0.06) 0%, transparent 40%),
-    radial-gradient(ellipse at 50% 50%, rgba(200, 150, 255, 0.05) 0%, transparent 50%),
-    radial-gradient(ellipse at 20% 80%, rgba(220, 140, 255, 0.06) 0%, transparent 40%),
-    radial-gradient(ellipse at 80% 70%, rgba(130, 200, 255, 0.04) 0%, transparent 45%),
-    radial-gradient(circle at 30% 0%, rgba(180, 100, 255, 0.05) 0%, transparent 35%);
+    radial-gradient(ellipse at 20% 20%, rgba(14, 165, 233, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 15%, rgba(2, 132, 199, 0.04) 0%, transparent 40%),
+    radial-gradient(ellipse at 50% 70%, rgba(12, 74, 110, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 30% 85%, rgba(14, 165, 233, 0.04) 0%, transparent 40%),
+    radial-gradient(ellipse at 70% 40%, rgba(2, 132, 199, 0.03) 0%, transparent 45%),
+    radial-gradient(circle at 50% 0%, rgba(14, 165, 233, 0.05) 0%, transparent 35%);
   pointer-events: none;
   z-index: 0;
 }
+
+/* ===== CHATBOT TỤC TĨU MIỀN BẮC ===== */
+.chat-toggle {
+  position: fixed; left: 20px; bottom: 20px; z-index: 9999;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white; border: none; font-size: 26px; cursor: pointer;
+  box-shadow: 0 4px 20px rgba(231,76,60,0.5);
+  transition: 0.3s;
+}
+.chat-toggle:hover { transform: scale(1.1); }
+.chat-toggle:active { transform: scale(0.9); transition: transform 0.1s; }
+.chat-container {
+  position: fixed; left: 20px; bottom: 86px; z-index: 9998;
+  width: 340px; height: 500px; background: #16213e;
+  border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+  display: flex; flex-direction: column; overflow: hidden;
+  border: 1px solid #e74c3c44;
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transform: translateY(20px) scale(0.95);
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              visibility 0s 0.25s;
+}
+.chat-container.open {
+  opacity: 1; visibility: visible; pointer-events: all;
+  transform: translateY(0) scale(1);
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              visibility 0s 0s;
+}
+.chat-container.closing {
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transform: translateY(15px) scale(0.95);
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              visibility 0s 0.2s;
+}
+.chat-header {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white; padding: 14px 18px; font-weight: bold;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.chat-header span { font-size: 15px; }
+.chat-header small { font-size: 10px; opacity: 0.8; font-weight: normal; }
+.chat-close { background: none; border: none; color: white; font-size: 18px; cursor: pointer; }
+.chat-messages {
+  flex: 1; overflow-y: auto; padding: 14px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.chat-messages::-webkit-scrollbar { width: 4px; }
+.chat-messages::-webkit-scrollbar-thumb { background: #e74c3c66; border-radius: 2px; }
+.chat-messages .message {
+  max-width: 88%; padding: 9px 13px; border-radius: 14px;
+  font-size: 13px; line-height: 1.5; word-wrap: break-word;
+}
+.chat-messages .message.bot {
+  background: #0f3460; color: #eee; align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+.chat-messages .message.user {
+  background: #e74c3c; color: white; align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+.typing-indicator {
+  display: flex; gap: 4px; align-items: center;
+  padding: 12px 18px; background: #0f3460; color: #eee;
+  align-self: flex-start; border-radius: 14px; border-bottom-left-radius: 4px;
+}
+.typing-indicator .dot {
+  width: 8px; height: 8px; border-radius: 50%; background: #7dd3fc;
+  animation: typingBounce 1.4s ease-in-out infinite;
+}
+.typing-indicator .dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator .dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.3; }
+  30% { transform: translateY(-8px); opacity: 1; }
+}
+.user-typing {
+  font-size: 11px; color: #94a3b8; padding: 2px 14px 4px;
+  text-align: right; font-style: italic; display: none;
+}
+.chat-input-area {
+  padding: 10px; background: #0f3460; display: flex; gap: 8px; border-top: 1px solid #e74c3c33;
+}
+.chat-input-area input {
+  flex: 1; padding: 9px 12px; border: none; border-radius: 10px;
+  background: #1a1a2e; color: white; font-size: 13px; outline: none;
+}
+.chat-input-area input::placeholder { color: #666; }
+.chat-input-area button {
+  padding: 9px 16px; border: none; border-radius: 10px;
+  background: #e74c3c; color: white; font-weight: bold; cursor: pointer;
+  transition: 0.2s;
+}
+.chat-input-area button:hover { background: #c0392b; }
 
 /* ===== CONTROL PANEL ===== */
 .control-panel {
@@ -521,11 +619,57 @@ body.dark-mode .empty-log {
   z-index: 1;
 }
 
+.bg-bubble {
+  position: fixed;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.25), rgba(0, 200, 230, 0.08));
+  animation: floatOcean linear infinite;
+  pointer-events: none;
+  z-index: 0;
+  box-shadow: inset -2px -2px 6px rgba(0, 100, 120, 0.1);
+}
+
 @keyframes rise {
   0% { transform: translateY(0) scale(1); opacity: 0; }
   10% { opacity: 0.6; }
   90% { opacity: 0.3; }
   100% { transform: translateY(-300px) scale(0.5); opacity: 0; }
+}
+
+@keyframes floatOcean {
+  0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+  5% { opacity: 0.45; }
+  50% { transform: translateY(-60vh) translateX(30px) scale(1.1); opacity: 0.25; }
+  95% { opacity: 0.1; }
+  100% { transform: translateY(-120vh) translateX(-20px) scale(0.6); opacity: 0; }
+}
+
+@keyframes sway {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(20px); }
+}
+
+/* ===== SPARKLE PARTICLES ===== */
+.sparkle {
+  position: fixed;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  animation: sparkleFade var(--dur) ease-in-out infinite;
+  background: white;
+  box-shadow: 0 0 4px 2px rgba(255,255,255,0.6);
+}
+@keyframes sparkleFade {
+  0%, 100% { opacity: 0; transform: scale(0.3); }
+  30% { opacity: 0.8; transform: scale(1.2); }
+  60% { opacity: 0.6; transform: scale(0.8); }
+}
+
+body.dark-mode .bg-bubble,
+body.dark-mode .sparkle {
+  display: none;
 }
 
 /* Waves SVG */
@@ -535,6 +679,16 @@ body.dark-mode .empty-log {
   height: 60px;
   margin-top: 20px;
   z-index: 1;
+}
+
+.wave-bottom {
+  margin-top: -10px;
+  height: 40px;
+  z-index: 0;
+}
+.wave-bottom svg {
+  height: 40px;
+  animation-duration: 10s;
 }
 
 .wave-container svg {
@@ -566,14 +720,14 @@ body.dark-mode .empty-log {
 
 /* ===== CARDS ===== */
 .card {
-  background: rgba(255,255,255,0.7);
+  background: rgba(255,255,255,0.65);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(200, 180, 255, 0.3);
+  border: 1px solid rgba(0, 180, 200, 0.15);
   border-radius: 20px;
   padding: 24px;
   margin-bottom: 20px;
-  box-shadow: 0 8px 32px rgba(140, 100, 200, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 150, 180, 0.08);
   transition: transform 0.2s, box-shadow 0.2s;
   position: relative;
   overflow: visible;
@@ -586,12 +740,12 @@ body.dark-mode .empty-log {
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, transparent, #a78bfa, #60a5fa, #a78bfa, transparent);
+  background: linear-gradient(90deg, transparent, #22d3ee, #0ea5e9, #22d3ee, transparent);
   border-radius: 3px 3px 0 0;
 }
 
 .card:nth-child(2)::before {
-  background: linear-gradient(90deg, transparent, #c084fc, #22d3ee, #c084fc, transparent);
+  background: linear-gradient(90deg, transparent, #2dd4bf, #14b8a6, #2dd4bf, transparent);
 }
 
 .card:nth-child(3)::before {
@@ -604,7 +758,7 @@ body.dark-mode .empty-log {
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(14, 165, 233, 0.15);
+  box-shadow: 0 12px 40px rgba(0, 180, 200, 0.12);
 }
 
 .card-title {
@@ -727,6 +881,13 @@ body.dark-mode .empty-log {
   align-items: center;
   margin-bottom: 12px;
   gap: 12px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 12px;
+  padding: 4px 4px 4px 0;
+}
+.chart-bar-group:hover {
+  transform: scale(1.03);
+  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.15);
 }
 
 .chart-label {
@@ -938,6 +1099,33 @@ body.dark-mode .empty-log {
   font-style: italic;
 }
 
+.log-day-sep {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #64748b;
+  border-bottom: 1px solid rgba(160, 130, 220, 0.12);
+  margin-top: 8px;
+}
+.log-day-sep:first-child {
+  margin-top: 0;
+}
+.log-day-sep .log-day-total {
+  color: #94a3b8;
+  font-weight: 500;
+  font-size: 0.75rem;
+}
+body.dark-mode .log-day-sep {
+  color: #94a3b8;
+  border-bottom-color: rgba(120, 80, 200, 0.1);
+}
+body.dark-mode .log-day-sep .log-day-total {
+  color: #64748b;
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 600px) {
   .ocean-header h1 { font-size: 1.5rem; }
@@ -1078,6 +1266,203 @@ body.dark-mode .quick-add-label {
   transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   background: linear-gradient(90deg, #22c55e, #0ea5e9, #ef4444);
 }
+
+/* ===== MONTH NAVIGATION ===== */
+.month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+.month-nav-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0284c7, #0ea5e9);
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.month-nav-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(14,165,233,0.3);
+}
+.month-nav-btn:active {
+  transform: scale(0.9);
+}
+.month-nav-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.month-nav-label {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #0c4a6e;
+}
+.month-nav-range {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+body.dark-mode .month-nav-label {
+  color: #7dd3fc;
+}
+body.dark-mode .month-nav-range {
+  color: #94a3b8;
+}
+
+/* ===== WEEK DONUT ===== */
+.week-donut-container {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(160, 130, 220, 0.2);
+  display: none;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.week-donut-container.show {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+.week-donut-container.hiding {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.week-donut-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.week-donut-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #0c4a6e;
+}
+.week-donut-close {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  transition: color 0.2s;
+}
+.week-donut-close:hover {
+  color: #ef4444;
+}
+.week-donut-body {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.week-donut-canvas {
+  flex-shrink: 0;
+  width: 280px;
+  height: 280px;
+}
+.week-donut-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1.5px solid rgba(160, 130, 220, 0.25);
+  border-radius: 12px;
+  padding: 12px 14px;
+  backdrop-filter: blur(4px);
+  min-width: 160px;
+}
+.week-donut-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.week-donut-legend-item:hover {
+  background: rgba(14, 165, 233, 0.1);
+  transform: translateX(3px);
+}
+.week-donut-legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.week-donut-legend-label {
+  color: #475569;
+}
+.week-donut-legend-value {
+  margin-left: auto;
+  font-weight: 600;
+  color: #0c4a6e;
+  font-size: 0.8rem;
+}
+body.dark-mode .week-donut-title {
+  color: #7dd3fc;
+}
+body.dark-mode .week-donut-legend {
+  background: rgba(15, 23, 42, 0.5);
+  border-color: rgba(120, 80, 200, 0.15);
+}
+body.dark-mode .week-donut-legend-label {
+  color: #cbd5e1;
+}
+body.dark-mode .week-donut-legend-value {
+  color: #7dd3fc;
+}
+body.dark-mode .week-donut-container {
+  border-top-color: rgba(120, 80, 200, 0.15);
+}
+
+/* ===== FLYING MONEY EFFECT ===== */
+.flying-money {
+  position: fixed;
+  pointer-events: none;
+  z-index: 99999;
+  font-weight: 700;
+  font-size: 1.6rem;
+  color: #ef4444;
+  text-shadow: 0 2px 12px rgba(239, 68, 68, 0.3);
+  animation: moneyFly 2.5s ease-out forwards;
+  white-space: nowrap;
+}
+
+@keyframes moneyFly {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(0.4) rotate(-5deg);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(-30px) scale(1.2) rotate(3deg);
+  }
+  30% {
+    transform: translateY(-80px) scale(1) rotate(-2deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-400px) scale(0.7) rotate(-8deg);
+  }
+}
 </style>
 </head>
 <body>
@@ -1158,9 +1543,27 @@ body.dark-mode .quick-add-label {
 
   <!-- Weekly Chart Card -->
   <div class="card">
-    <div class="card-title"><i>&#x1F4C8;</i> Chi tiêu theo tuần (tháng này)</div>
+    <div class="card-title"><i>&#x1F4C8;</i> Chi tiêu theo tuần</div>
+    <div class="month-nav">
+      <button class="month-nav-btn" id="monthPrev">&#x25C0;</button>
+      <div class="month-nav-info">
+        <span class="month-nav-label" id="monthLabel">Tháng 7/2026</span>
+        <span class="month-nav-range" id="monthDateRange">Từ 1/7 đến 31/7</span>
+      </div>
+      <button class="month-nav-btn" id="monthNext">&#x25B6;</button>
+    </div>
     <div class="chart-container" id="weeklyChart">
       <p class="empty-log">Chưa có dữ liệu</p>
+    </div>
+    <div class="week-donut-container" id="weekDonutContainer">
+      <div class="week-donut-header">
+        <span class="week-donut-title" id="weekDonutTitle">Tuần 1</span>
+        <button class="week-donut-close" id="weekDonutClose">&times;</button>
+      </div>
+      <div class="week-donut-body">
+        <canvas class="week-donut-canvas" id="weekDonutChart" width="280" height="280"></canvas>
+        <div class="week-donut-legend" id="weekDonutLegend"></div>
+      </div>
     </div>
   </div>
 
@@ -1222,8 +1625,34 @@ body.dark-mode .quick-add-label {
   </div>
 </div>
 
+<!-- Bottom Wave -->
+<div class="wave-container wave-bottom">
+  <svg viewBox="0 0 1440 60" preserveAspectRatio="none">
+    <path fill="rgba(0,180,200,0.06)" d="M0,30 C360,60 720,0 1080,30 C1260,45 1350,30 1440,30 L1440,60 L0,60 Z"/>
+  </svg>
+  <svg viewBox="0 0 1440 60" preserveAspectRatio="none">
+    <path fill="rgba(0,200,220,0.04)" d="M0,40 C360,10 720,50 1080,20 C1260,10 1350,40 1440,40 L1440,60 L0,60 Z"/>
+  </svg>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast">&#x2705; Đã lưu khoản chi!</div>
+
+<!-- Chatbot Tục Tĩu Miền Bắc -->
+<button class="chat-toggle" id="chatToggle" title="Mở đm ra nói chuyện">💬</button>
+<div class="chat-container" id="chatContainer">
+  <div class="chat-header">
+    <div>
+      <span>🤬 Bot Bắc Kỳ</span><br><small>nói năng nhẹ nhàng thôi con chó</small>
+    </div>
+    <button class="chat-close" id="chatClose">✕</button>
+  </div>
+  <div class="chat-messages" id="chatMessages"></div>
+  <div class="chat-input-area">
+    <input type="text" id="chatInput" placeholder="Hỏi đại cmn đi..." autocomplete="off">
+    <button id="chatSend">Gửi</button>
+  </div>
+</div>
 
 <script>
 // ===== DATA =====
@@ -1249,8 +1678,8 @@ function fmt(n) {
 function getWeek(date) {
   const d = new Date(date);
   const start = new Date(d.getFullYear(), d.getMonth(), 1);
-  const day = start.getDay();
-  const diff = d.getDate() + day - 1;
+  const day = start.getDay() || 7;
+  const diff = d.getDate() + day - 2;
   return Math.floor(diff / 7) + 1;
 }
 
@@ -1264,7 +1693,9 @@ function isToday(d) {
 function isThisWeek(d) {
   const t = new Date();
   const startOfWeek = new Date(t);
-  startOfWeek.setDate(t.getDate() - t.getDay());
+  const day = t.getDay();
+  const diff = day === 0 ? 6 : day - 1;
+  startOfWeek.setDate(t.getDate() - diff);
   startOfWeek.setHours(0,0,0,0);
   return d >= startOfWeek;
 }
@@ -1306,13 +1737,28 @@ function updateStats() {
 }
 
 // ===== WEEKLY CHART =====
+let chartMonth = new Date();
+chartMonth.setDate(1);
+
 function updateChart() {
   const container = document.getElementById('weeklyChart');
-  const now = new Date();
-  const monthExpenses = expenses.filter(e => isThisMonth(new Date(e.date)));
+  const monthExpenses = expenses.filter(e => {
+    const d = new Date(e.date);
+    return d.getFullYear() === chartMonth.getFullYear() && d.getMonth() === chartMonth.getMonth();
+  });
+
+  const monthLabel = chartMonth.toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' });
+  document.getElementById('monthLabel').textContent = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
+
+  const firstDay = new Date(chartMonth.getFullYear(), chartMonth.getMonth(), 1);
+  const lastDay = new Date(chartMonth.getFullYear(), chartMonth.getMonth() + 1, 0);
+  document.getElementById('monthDateRange').textContent =
+    'T\u1EEB ' + firstDay.getDate() + '/' + (firstDay.getMonth()+1) +
+    ' \u0111\u1EBFn ' + lastDay.getDate() + '/' + (lastDay.getMonth()+1);
 
   if (monthExpenses.length === 0) {
-    container.innerHTML = '<p class="empty-log">Chưa có dữ liệu</p>';
+    container.innerHTML = '<p class="empty-log">Ch\u01B0a c\u00F3 d\u1EEF li\u1EC7u</p>';
+    hideWeekDonut();
     return;
   }
 
@@ -1333,7 +1779,7 @@ function updateChart() {
     const pct = (val / maxVal) * 100;
     const isSmall = pct < 15;
     html += `
-      <div class="chart-bar-group">
+      <div class="chart-bar-group" data-week="${i}" style="cursor:pointer">
         <div class="chart-label">${labels[i-1]}</div>
         <div class="chart-track">
           <div class="chart-fill ${isSmall ? 'small' : ''}" style="width:${Math.max(pct, 2)}%">
@@ -1346,10 +1792,16 @@ function updateChart() {
 
   container.innerHTML = html;
 
-  // Trigger animation
   requestAnimationFrame(() => {
     container.querySelectorAll('.chart-fill').forEach(el => {
       el.style.width = el.style.width;
+    });
+  });
+
+  container.querySelectorAll('.chart-bar-group').forEach(el => {
+    el.addEventListener('click', function() {
+      const week = parseInt(this.dataset.week);
+      drawWeekDonutChart(week);
     });
   });
 }
@@ -1366,19 +1818,35 @@ function renderLog() {
     return;
   }
 
-  list.innerHTML = filtered.map(e => {
+  const groups = {};
+  filtered.forEach(e => {
     const d = new Date(e.date);
     const ds = d.toLocaleDateString('vi-VN');
-    const ts = d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-    return `
-      <div class="log-item" data-id="${e.id}">
-        <span class="log-date">${ds} ${ts}</span>
-        <span class="log-amount">-${fmt(e.amount)} \u20AB</span>
-        <span class="log-reason">${escapeHtml(e.reason)}</span>
-        <button class="log-del" onclick="deleteExpense(${e.id})" title="Xo\u00E1">&times;</button>
-      </div>
-    `;
-  }).join('');
+    if (!groups[ds]) groups[ds] = [];
+    groups[ds].push(e);
+  });
+
+  const totalDays = Object.keys(groups).length;
+  let html = '';
+  Object.keys(groups).forEach((ds, di) => {
+    const items = groups[ds];
+    const dayTotal = items.reduce((s, e) => s + e.amount, 0);
+    html += `<div class="log-day-sep"><span>${ds}</span><span class="log-day-total">-${fmt(dayTotal)} \u20AB</span></div>`;
+    items.forEach(e => {
+      const d = new Date(e.date);
+      const ts = d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+      html += `
+        <div class="log-item" data-id="${e.id}">
+          <span class="log-date">${ts}</span>
+          <span class="log-amount">-${fmt(e.amount)} \u20AB</span>
+          <span class="log-reason">${escapeHtml(e.reason)}</span>
+          <button class="log-del" onclick="deleteExpense(${e.id})" title="Xo\u00E1">&times;</button>
+        </div>
+      `;
+    });
+  });
+
+  list.innerHTML = html;
 }
 
 function filterExpenses() {
@@ -1453,6 +1921,7 @@ function renderQuickAdd() {
         date: new Date().toISOString()
       });
       saveData();
+      showFlyingMoney(val);
       refresh();
       showToast('Đã thêm ' + fmt(val) + '₫ cho "' + reason + '"!');
     });
@@ -1489,6 +1958,7 @@ document.getElementById('expenseForm').addEventListener('submit', function(e) {
   });
 
   saveData();
+  showFlyingMoney(amount);
   document.getElementById('amount').value = '';
   document.getElementById('reason').value = '';
   refresh();
@@ -1501,7 +1971,6 @@ document.querySelectorAll('.log-controls button').forEach(btn => {
     document.querySelectorAll('.log-controls button').forEach(b => b.classList.remove('active'));
     this.classList.add('active');
     currentFilter = this.dataset.filter;
-    drawDonutChart();
     renderLog();
   });
 });
@@ -1549,8 +2018,8 @@ function drawDonutChart(hoverIdx = -1, gapOverride) {
   const hoverGap = 12;
   const strokeW = 3;
 
-  const filtered = filterExpenses();
-  if (filtered.length === 0) {
+  const data = expenses;
+  if (data.length === 0) {
     ctx.font = 'bold 14px "Segoe UI", sans-serif';
     ctx.fillStyle = '#94a3b8';
     ctx.textAlign = 'center';
@@ -1563,7 +2032,7 @@ function drawDonutChart(hoverIdx = -1, gapOverride) {
   }
 
   const groups = {};
-  filtered.forEach(e => {
+  data.forEach(e => {
     const key = e.reason.toLowerCase().trim();
     groups[key] = groups[key] || { label: e.reason, total: 0, count: 0 };
     groups[key].total += e.amount;
@@ -1715,8 +2184,7 @@ function darkenColor(hex, amount) {
 function setHover(idx) {
   if (idx === hoverAnim.idx) return;
 
-  const filtered = filterExpenses();
-  const grandTotal = filtered.reduce((s, e) => s + e.amount, 0);
+  const grandTotal = expenses.reduce((s, e) => s + e.amount, 0);
 
   if (idx >= 0 && slicesCache[idx]) {
     hoverAnim.numTo = slicesCache[idx].total;
@@ -1805,6 +2273,292 @@ function setupDonutHover() {
     setHover(-1);
   });
 }
+
+// ===== WEEK DONUT CHART =====
+let weekSlicesCache = [];
+let weekHoverIdx = -1;
+let weekLastNum = -1;
+let weekSwitching = false;
+let weekHoverAnim = { numFrom: 0, numTo: 0, numCurrent: 0, running: false, time: 0 };
+
+function drawWeekDonutChart(weekNum) {
+  const container = document.getElementById('weekDonutContainer');
+
+  if (weekSwitching) return;
+
+  if (weekLastNum !== -1 && weekLastNum !== weekNum) {
+    weekSwitching = true;
+    weekHoverAnim.running = false;
+    container.classList.remove('show');
+    container.classList.add('hiding');
+    weekLastNum = weekNum;
+    setTimeout(() => {
+      weekHoverIdx = -1;
+      weekHoverAnim.numCurrent = 0;
+      weekSwitching = false;
+      container.classList.remove('hiding');
+      container.style.display = 'block';
+      void container.offsetHeight;
+      container.classList.add('show');
+      drawWeekDonutChart(weekNum);
+    }, 200);
+    return;
+  }
+  weekLastNum = weekNum;
+
+  if (!weekSwitching) {
+    container.classList.remove('hiding');
+    if (container.style.display !== 'block') {
+      container.style.display = 'block';
+      void container.offsetHeight;
+      container.classList.add('show');
+    }
+  }
+
+  document.getElementById('weekDonutTitle').textContent = 'Tu\u1EA7n ' + weekNum;
+
+  const weekExpenses = expenses.filter(e => {
+    const d = new Date(e.date);
+    return d.getFullYear() === chartMonth.getFullYear() &&
+           d.getMonth() === chartMonth.getMonth() &&
+           getWeek(d) === weekNum;
+  });
+
+  const canvas = document.getElementById('weekDonutChart');
+  const legend = document.getElementById('weekDonutLegend');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const w = canvas.width, h = canvas.height;
+  const displayW = w / dpr, displayH = h / dpr;
+  const cx = displayW / 2, cy = displayH / 2;
+  const outerR = 110, innerR = 70;
+
+  if (weekExpenses.length === 0) {
+    ctx.font = '14px "Segoe UI", sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Không có dữ liệu tuần này', cx, cy);
+    legend.innerHTML = '';
+    weekSlicesCache = [];
+    return;
+  }
+
+  const groups = {};
+  weekExpenses.forEach(e => {
+    const key = e.reason.toLowerCase().trim();
+    groups[key] = groups[key] || { label: e.reason, total: 0 };
+    groups[key].total += e.amount;
+  });
+
+  const entries = Object.values(groups).sort((a, b) => b.total - a.total);
+  const total = entries.reduce((s, e) => s + e.total, 0);
+
+  if (!weekHoverAnim.running && weekHoverAnim.numCurrent === 0) {
+    weekHoverAnim.numCurrent = total;
+  }
+
+  let startAngle = -Math.PI / 2;
+  weekSlicesCache = [];
+
+  ctx.beginPath();
+  ctx.arc(cx, cy + 2, outerR + 1, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(0,0,0,0.05)';
+  ctx.fill();
+
+  entries.forEach((entry, i) => {
+    const angle = (entry.total / total) * Math.PI * 2;
+    const color = DONUT_COLORS[i % DONUT_COLORS.length];
+    const mid = startAngle + angle / 2;
+    const isHover = i === weekHoverIdx;
+    const gap = isHover ? 10 : 0;
+    const ox = Math.cos(mid) * gap;
+    const oy = Math.sin(mid) * gap;
+
+    ctx.save();
+    ctx.translate(ox, oy);
+
+    ctx.beginPath();
+    ctx.moveTo(cx + innerR * Math.cos(startAngle), (cy + 2) + innerR * Math.sin(startAngle));
+    ctx.arc(cx, cy + 2, outerR, startAngle, startAngle + angle);
+    ctx.lineTo(cx + innerR * Math.cos(startAngle + angle), (cy + 2) + innerR * Math.sin(startAngle + angle));
+    ctx.arc(cx, cy + 2, innerR, startAngle + angle, startAngle, true);
+    ctx.closePath();
+    ctx.fillStyle = darkenColor(color, 20);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(cx + innerR * Math.cos(startAngle), cy + innerR * Math.sin(startAngle));
+    ctx.arc(cx, cy, outerR, startAngle, startAngle + angle);
+    ctx.lineTo(cx + innerR * Math.cos(startAngle + angle), cy + innerR * Math.sin(startAngle + angle));
+    ctx.arc(cx, cy, innerR, startAngle + angle, startAngle, true);
+    ctx.closePath();
+
+    if (isHover && gap > 1) {
+      ctx.shadowColor = 'rgba(0,0,0,0.12)';
+      ctx.shadowBlur = 8;
+    }
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = 'white';
+    ctx.stroke();
+
+    if (angle > 0.25) {
+      const shineA = angle * 0.3;
+      const shineS = startAngle + angle * 0.15;
+      ctx.beginPath();
+      ctx.arc(cx, cy - 2, outerR - 6, shineS, shineS + shineA);
+      ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+    }
+
+    ctx.restore();
+
+    weekSlicesCache.push({ startAngle, angle, color, label: entry.label, total: entry.total, mid });
+    startAngle += angle;
+  });
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, innerR - 1, 0, Math.PI * 2);
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = 'rgba(0,0,0,0.04)';
+  ctx.stroke();
+
+  const hovered = weekHoverIdx >= 0 && weekSlicesCache[weekHoverIdx] ? weekSlicesCache[weekHoverIdx] : null;
+  const dispValue = Math.round(weekHoverAnim.numCurrent);
+  if (hovered) {
+    ctx.font = 'bold 16px "Segoe UI", sans-serif';
+    ctx.fillStyle = hovered.color;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(fmt(dispValue), cx, cy - 5);
+    ctx.font = '9px "Segoe UI", sans-serif';
+    ctx.fillStyle = '#64748b';
+    ctx.fillText(hovered.label, cx, cy + 14);
+  } else {
+    ctx.font = 'bold 17px "Segoe UI", sans-serif';
+    ctx.fillStyle = '#334155';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(fmt(dispValue), cx, cy - 5);
+    ctx.font = '10px "Segoe UI", sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Tu\u1EA7n ' + weekNum, cx, cy + 14);
+  }
+
+  legend.innerHTML = weekSlicesCache.map((s, i) => {
+    const pct = ((s.total / total) * 100).toFixed(1);
+    const active = i === weekHoverIdx ? ' style="font-weight:700"' : '';
+    return `\u000A      <div class="week-donut-legend-item" data-widx="${i}"${active}>\u000A        <span class="week-donut-legend-dot" style="background:${s.color};border:2px solid white;box-shadow:0 0 0 1px rgba(0,0,0,0.05)"></span>\u000A        <span class="week-donut-legend-label">${escapeHtml(s.label)}</span>\u000A        <span class="week-donut-legend-value">${fmt(s.total)}\u20AB (${pct}%)</span>\u000A      </div>\u000A    `;
+  }).join('');
+
+  Array.from(legend.children).forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      const idx = parseInt(el.dataset.widx);
+      setWeekHover(idx, weekNum);
+    });
+    el.addEventListener('mouseleave', () => {
+      setWeekHover(-1, weekNum);
+    });
+  });
+
+  canvas.onmousemove = function(e) {
+    const r = canvas.getBoundingClientRect();
+    const mx = e.clientX - r.left;
+    const my = e.clientY - r.top;
+    const dx = mx - displayW / 2, dy = my - displayH / 2;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < innerR || dist > outerR) {
+      canvas.style.cursor = 'default';
+      if (weekHoverIdx !== -1) { setWeekHover(-1, weekNum); }
+      return;
+    }
+    let angle = Math.atan2(dy, dx);
+    if (angle < -Math.PI / 2) angle += Math.PI * 2;
+    let found = -1;
+    for (let i = 0; i < weekSlicesCache.length; i++) {
+      const s = weekSlicesCache[i];
+      if (angle >= s.startAngle && angle < s.startAngle + s.angle) { found = i; break; }
+    }
+    canvas.style.cursor = found >= 0 ? 'pointer' : 'default';
+    if (found !== weekHoverIdx) { setWeekHover(found, weekNum); }
+  };
+
+  canvas.onmouseleave = function() {
+    if (weekHoverIdx !== -1) { setWeekHover(-1, weekNum); }
+  };
+}
+
+function setWeekHover(idx, weekNum) {
+  if (idx === weekHoverIdx) return;
+  weekHoverIdx = idx;
+
+  const total = weekSlicesCache.reduce((s, sl) => s + sl.total, 0);
+  if (idx >= 0 && weekSlicesCache[idx]) {
+    weekHoverAnim.numTo = weekSlicesCache[idx].total;
+  } else {
+    weekHoverAnim.numTo = total;
+  }
+  weekHoverAnim.numFrom = weekHoverAnim.numCurrent || total;
+  weekHoverAnim.time = 0;
+  if (!weekHoverAnim.running) {
+    weekHoverAnim.running = true;
+    animateWeekDonut(weekNum);
+  }
+}
+
+function animateWeekDonut(weekNum) {
+  const duration = 400;
+  weekHoverAnim.time += 16;
+  const t = Math.min(weekHoverAnim.time / duration, 1);
+  const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  weekHoverAnim.numCurrent = weekHoverAnim.numFrom + (weekHoverAnim.numTo - weekHoverAnim.numFrom) * eased;
+  drawWeekDonutChart(weekNum);
+  if (t < 1) {
+    requestAnimationFrame(() => animateWeekDonut(weekNum));
+  } else {
+    weekHoverAnim.running = false;
+    weekHoverAnim.numCurrent = weekHoverAnim.numTo;
+  }
+}
+
+function hideWeekDonut() {
+  const c = document.getElementById('weekDonutContainer');
+  if (c.classList.contains('show') || c.style.display === 'block') {
+    c.classList.remove('show');
+    c.classList.add('hiding');
+    setTimeout(() => {
+      c.style.display = 'none';
+      c.classList.remove('hiding');
+    }, 200);
+  }
+}
+
+document.getElementById('weekDonutClose').addEventListener('click', hideWeekDonut);
+
+document.getElementById('monthPrev').addEventListener('click', function() {
+  chartMonth.setMonth(chartMonth.getMonth() - 1);
+  hideWeekDonut();
+  updateChart();
+});
+
+document.getElementById('monthNext').addEventListener('click', function() {
+  chartMonth.setMonth(chartMonth.getMonth() + 1);
+  hideWeekDonut();
+  updateChart();
+});
 
 // ===== CONTROL PANEL =====
 
@@ -2061,7 +2815,38 @@ function refresh() {
   renderLog();
 }
 
-// ===== BUBBLES =====
+// ===== BUBBLES & SPARKLES =====
+function createOceanBubbles() {
+  for (let i = 0; i < 12; i++) {
+    const bubble = document.createElement('div');
+    bubble.className = 'bg-bubble';
+    const size = Math.random() * 50 + 12;
+    bubble.style.width = size + 'px';
+    bubble.style.height = size + 'px';
+    bubble.style.left = Math.random() * 100 + '%';
+    bubble.style.bottom = '-40px';
+    bubble.style.animationDuration = (Math.random() * 18 + 14) + 's';
+    bubble.style.animationDelay = (Math.random() * 14) + 's';
+    document.body.appendChild(bubble);
+  }
+}
+
+function createSparkles() {
+  for (let i = 0; i < 40; i++) {
+    const s = document.createElement('div');
+    s.className = 'sparkle';
+    const sz = Math.random() * 5 + 2;
+    s.style.width = sz + 'px';
+    s.style.height = sz + 'px';
+    s.style.left = Math.random() * 100 + '%';
+    s.style.top = Math.random() * 100 + '%';
+    s.style.setProperty('--dur', (Math.random() * 3 + 2) + 's');
+    s.style.animationDelay = (Math.random() * 5) + 's';
+    s.style.boxShadow = `0 0 ${sz + 3}px 1.5px rgba(255,255,255,0.8)`;
+    document.body.appendChild(s);
+  }
+}
+
 function createBubbles() {
   const header = document.getElementById('oceanHeader');
   for (let i = 0; i < 15; i++) {
@@ -2081,9 +2866,1004 @@ function createBubbles() {
 // ===== INIT =====
 loadData();
 createBubbles();
+createOceanBubbles();
+createSparkles();
 setupDonutHover();
 initDarkMode();
 refresh();
+
+// ===== CHATBOT TỤC TĨU MIỀN BẮC =====
+const bacTuc = [
+  "địt mẹ", "đm", "đếch", "vãi", "vãi cả lồn", "vl", "cl", "cặc", "con cặc",
+  "lồn", "đm", "đĩ", "chó", "chó đẻ", "ăn lồn", "bú cặc", "đần", "ngu",
+  "ngu như chó", "thằng đm", "con đm", "cái đm", "cặc gì", "lồn gì"
+];
+
+function bacRand() {
+  return bacTuc[Math.floor(Math.random() * bacTuc.length)];
+}
+
+function chamDau() {
+  const d = [".", "!", "?", "...", " nhá!", " đấy!", " nhé!", " vãi!", " đê!"];
+  return d[Math.floor(Math.random() * d.length)];
+}
+
+function wrapper(text) {
+  const prefix = ["Ừ thì ", "Thì ", "Đm ", "Vãi, ", "Đệt, ", "Này đm, ", "Bố mày bảo này: "];
+  const p = prefix[Math.floor(Math.random() * prefix.length)];
+  return p + text + chamDau();
+}
+
+
+
+const KB = {
+  chao: {
+    keys: ["chào", "hello", "hi", "xin chào", "hế lô", "ê", "này", "alo", "có ai", "có đó"],
+    resp: [
+      "Chào con chó mày! Có việc đm gì không? Hỏi nhanh lên!",
+      "Alo đm gì thế? Nói nhanh lên!",
+      "Đm lại chào hỏi rồi. Hỏi đê!",
+      "Chào, xong chưa? Có hỏi đm thì nói đi!"
+    ]
+  },
+  khoe: {
+    keys: ["khỏe", "sao rồi", "thế nào", "ổn", "sống", "ra sao", "sao đấy"],
+    resp: [
+      "Tao vẫn khỏe con chó ạ! Còn mày thì sao?",
+      "Đm có chết được đâu! Vẫn sống tốt!",
+      "Tao khỏe! Mà mày có vẻ buồn nhỉ? Có chuyện đm gì kể tao nghe!",
+      "Vẫn thế, địt mẹ sống từng ngày! Mày thế nào?"
+    ]
+  },
+  cam_on: {
+    keys: ["cảm ơn", "thanks", "cám ơn", "thank"],
+    resp: [
+      "Không có đm gì đâu! Có câu hỏi đm thì hỏi tiếp!",
+      "Ừ, cảm ơn đm gì! Cần đm nữa thì gọi!",
+      "Được rồi! Lần sau lại hỏi tiếp nhá!"
+    ]
+  },
+  tam_biet: {
+    keys: ["tạm biệt", "bye", "goodbye", "bái bai", "gút bai", "đi đây", "sleep", "ngủ", "bai"],
+    resp: [
+      "Bye con chó! Có đm lại hỏi tiếp nhá!",
+      "Ừ ngủ đi! Mai lại hỏi đm tiếp!",
+      "Bai bai! Địt mẹ nhớ quay lại đấy!"
+    ]
+  },
+  ten: {
+    keys: ["tên", "mày là", "ai đấy", "mày tên", "gọi mày", "tên đm"],
+    resp: [
+      "Tao là Bot Bắc Kỳ chuyên chửi đm mày đây!",
+      "Đm mày hỏi tên tao? Tao là Bot Bắc Kỳ - thằng chuyên tục tĩu!",
+      "Tao là Bot Bắc Kỳ, con chó nào hỏi cũng trả lời bằng địt mẹ!"
+    ]
+  },
+  tuoi: {
+    keys: ["tuổi", "già", "trẻ", "sinh năm", "bao nhiêu tuổi"],
+    resp: [
+      "Tuổi đm? Tao mới sinh hồi nãy, địt mẹ hỏi làm đm!",
+      "Tao mãi thanh xuân, không bao giờ già!",
+      "Tuổi tác chỉ là con số! Nhưng mà tao trẻ đm!"
+    ]
+  },
+  gioi_tinh: {
+    keys: ["trai", "gái", "nam", "nữ", "giới tính"],
+    resp: [
+      "Tao là đàn ông đích thực! Bắc Kỳ chính hiệu!",
+      "Giới tính đm? Tao là bot, không có đm!",
+      "Đàn ông con trai Hà Nội đm gì! Tao chính hiệu!"
+    ]
+  },
+  thoi_tiet: {
+    keys: ["thời tiết", "nóng", "lạnh", "mưa", "nắng", "bão", "rét", "ấm", "nhiệt độ"],
+    resp: [
+      "Thời tiết đm? Mày không xem dự báo à? Địt mẹ hỏi tao đm biết! Ở ngoài nóng vãi đm ra đấy!",
+      "Trời đm như thế nào thì mày tự biết! Đang nóng đừng hỏi lạnh!",
+      "Mưa đm gì! Ở nhà ôm người yêu đi, hỏi thời tiết làm đm!"
+    ]
+  },
+  hom_nay: {
+    keys: ["hôm nay", "ngày mấy", "thứ mấy", "date", "hôm qua", "ngày mai"],
+    resp: [
+      "Hôm nay là ngày " + new Date().toLocaleDateString('vi-VN') + " đấy! Học đm mà không biết à?",
+      "Địt mẹ hôm nay là " + new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) + "! Lịch đm đầy ra kia kìa!",
+      "Ngày " + new Date().getDate() + " tháng " + (new Date().getMonth()+1) + " năm " + new Date().getFullYear() + ". Đm có lịch đm không?"
+    ]
+  },
+  gio_giac: {
+    keys: ["mấy giờ", "giờ rồi", "thời gian", "bây giờ"],
+    resp: [
+      "Bây giờ là " + new Date().toLocaleTimeString('vi-VN') + " rồi! Đm mày hỏi làm đm?",
+      "Giờ đm? " + new Date().toLocaleTimeString('vi-VN') + "! Mau đm lên!",
+      new Date().toLocaleTimeString('vi-VN') + " rồi đấy! Có việc đm gì làm đi!"
+    ]
+  },
+  hoc: {
+    keys: ["học", "bài", "thi", "điểm", "trường", "lớp", "môn", "kiến thức", "sách", "giáo trình"],
+    resp: [
+      "Học hành đm gì? Học thì phải chăm, ngồi vào bàn là học ngay đừng có ngủ. Học xong rồi yêu đương cũng chả muộn!",
+      "Đm học hành thì phải tập trung vô, đừng có suốt ngày nghĩ đến chuyện đm! Làm bài tập đầy đủ vào!",
+      "Thi cử à? Địt mẹ đừng có lo, học bài vô là thi được. Mà thi xong rồi tìm bồ cũng được!",
+      "Học kiểu đm gì thế? Mày phải hiểu bản chất, chứ học vẹt thì mai lại quên!",
+      "Cần tài liệu đm? Lên mạng mà tìm! Google free mà! Địt mẹ có mỗi thế cũng hỏi!"
+    ]
+  },
+  thi_cu: {
+    keys: ["thi cử", "cách học", "học tập", "luyện thi", "ôn thi", "đề thi"],
+    resp: [
+      "Luyện thi à? Làm đề nhiều vô! Chép đáp án ra mà học. Học xong nghĩ đến chuyện yêu đương cho nó có động lực!",
+      "Mày hỏi tao cách học? Cắn răng mà học, học ngu thì chịu đm! Mà học đm gì, ra ngoài tán gái cho đời vui!"
+    ]
+  },
+  toan: {
+    keys: ["toán", "tính", "cộng", "trừ", "nhân", "chia", "phép tính"],
+    resp: [
+      "Toán đm? Tao giải toán siêu cao siêu! Đưa biểu thức đây tao tính cho!",
+      "Toán à? Cứ gõ phép tính ra tao giải cho! Địt mẹ toán nào tao chả làm được!"
+    ]
+  },
+  song: {
+    keys: ["sống", "cuộc đời", "cuộc sống", "đời", "nhân sinh", "ý nghĩa", "tồn tại"],
+    resp: [
+      "Đời đm gì? Sống thì cứ sống mẹ đi! Quan trọng là vui, có tình yêu là hết đm!",
+      "Cuộc đời ngắn lắm con chó ạ! Cứ yêu đi, cứ đm đi, đừng để sau hối hận!",
+      "Địt mẹ câu hỏi sâu xa thế? Sống vui lên, có trai có gái là hết đm ngay!"
+    ]
+  },
+  yeu: {
+    keys: ["yêu", "người yêu", "crush", "bạn gái", "bạn trai", "tình yêu", "tán", "thích", "đổ", "mối", "bồ"],
+    resp: [
+      "Yêu đương đm gì? Cứ đến gần mà tán, không được thì tán đứa khác! Đàn ông con trai mà nhát thế thì đm à!",
+      "Yêu à? Tinh tế lên, đừng thô bạo. Mà thô bạo cũng tốt, gái nó thích bất ngờ!",
+      "Tình yêu đm gì mà hỏi sâu thế! Có thích thì nhắn tin, hẹn hò, rồi tiến xa hơn!",
+      "Người yêu hờn à? Mua quà rồi đm một đêm là hết hờn!",
+      "Yêu xa khổ lắm con chó ạ! Ở gần mà yêu, tối còn đm được!",
+      "Tán gái thì cứ tự nhiên, đừng vồ vập quá! Gái nó sợ đấy!"
+    ]
+  },
+  chia_tay: {
+    keys: ["chia tay", "đá", "đổ vỡ", "cạch mặt", "bỏ", "đứt", "cắt"],
+    resp: [
+      "Chia tay à? Tiếc thật! Nhưng mà địt mẹ đàn ông không được khóc! Đi uống bia đi!",
+      "Bị đá hả? Thế giới còn nhiều gái lắm! Cố lên, rồi sẽ có người tốt hơn!",
+      "Đổ vỡ là chuyện thường! Yêu lại đi! Tao tin mày!"
+    ]
+  },
+
+  giai_tri: {
+    keys: ["phim", "nhạc", "game", "bài hát", "xem", "nghe", "chơi", "giải trí", "film", "movie", "ca nhạc", "mv"],
+    resp: [
+      "Phim đm? Xem phim tình cảm đi, vừa xem vừa đm nhau! Hay đm!",
+      "Game nhá! Đừng nghiện, mà chơi game cùng người yêu thì càng vui!",
+      "Giải trí thì xem phim nghe nhạc, mấy phim 18+ cũng hay đm đấy!",
+      "Mày thích thể loại đm? Hài, hành động hay tình cảm? Nói tao tư vấn cho!"
+    ]
+  },
+  phim_anh: {
+    keys: ["phim hay", "xem gì", "phim nào", "đề cử", "review", "đánh giá phim"],
+    resp: [
+      "Phim hay à? Địt mẹ xem phim Hàn đi! Hay đm! Nhưng mà nhớ mang theo khăn giấy!",
+      "Xem gì? Tao đề cử phim hành động! Máu lửa! Hoặc phim tình cảm để đm!",
+      "Review phim? Cứ xem thử đi, thấy đm thì tắt!"
+    ]
+  },
+  an: {
+    keys: ["ăn", "món", "đồ ăn", "nhậu", "bia", "rượu", "nhà hàng", "quán", "nấu", "nướng", "luộc", "xào", "chiên", "rang", "gà", "thịt", "cá", "trứng", "cơm", "phở"],
+    resp: [
+      "Ăn uống đm? Ăn xong rồi đm mới khỏe! Đừng ăn no quá rồi đm không nổi!",
+      "Nhậu nhẹt à? Uống vừa thôi, say quá lại đm không được!",
+      "Món ngon thì ăn đi! Ăn xong có sức mà đm với người yêu!",
+      "Nấu ăn à? Lên YouTube mà học! Địt mẹ tao cũng đm biết nấu!",
+      "Có đm! Đầy ra đấy! Mày muốn ăn gà hay ăn đm? Có tiền là có tất!"
+    ]
+  },
+  suc_khoe: {
+    keys: ["sức khỏe", "ốm", "bệnh", "tập thể dục", "thể thao", "chạy bộ", "gym", "yoga", "đau", "sốt", "ho", "cảm"],
+    resp: [
+      "Sức khỏe quan trọng! Tập đm vào cho khỏe! Chuyện đm mới bền!",
+      "Ốm thì đi khám ngay! Sức khỏe có tốt thì chuyện đm mới ngon!",
+      "Tập gym à? Tập cho khỏe, đm dai sức! Mà tập vừa thôi, đừng quá sức!",
+      "Đau ốm đm? Uống thuốc nghỉ ngơi! Đừng có nằm nhà chơi game!"
+    ]
+  },
+  tien: {
+    keys: ["tiền", "lương", "kiếm tiền", "làm giàu", "việc làm", "công việc", "thất nghiệp", "thu nhập", "lương thưởng"],
+    resp: [
+      "Tiền đm? Có tiền thì có gái, có sex! Thế giới thực tế lắm!",
+      "Lương đm cũng là tiền! Tiết kiệm đi rồi dẫn gái đi chơi!",
+      "Thất nghiệp à? Ra ngoài kiếm việc đi! Không tiền thì đừng mơ chuyện đm!",
+      "Làm giàu thì phải cố gắng, đừng ngồi không mà mơ!"
+    ]
+  },
+  nghe_nghiep: {
+    keys: ["nghề", "việc", "job", "làm gì", "sinh viên", "nhân viên", "kỹ sư", "bác sĩ", "giáo viên"],
+    resp: [
+      "Đm mày làm nghề đm? Có vất vả không? Kể tao nghe xem!",
+      "Làm việc thì phải yêu nghề! Yêu nghề rồi mới có tiền, có tiền mới có gái!",
+      "Nghề nào cũng cao quý! Nhưng mà lương cao thì càng tốt!"
+    ]
+  },
+  gia_dinh: {
+    keys: ["gia đình", "bố mẹ", "cha mẹ", "ông bà", "con cái", "vợ chồng", "họ hàng", "cô dì", "chú bác"],
+    resp: [
+      "Gia đình là trên hết! Có vợ rồi thì chuyện đm là bổn phận!",
+      "Bố mẹ đm cũng thương mày! Có bồ thì dẫn về ra mắt đi!",
+      "Vợ chồng với nhau quan trọng nhất là chuyện đm! Thiếu lửa là chết!"
+    ]
+  },
+  choi: {
+    keys: ["đi chơi", "du lịch", "du lich", "travel", "đi đâu", "chơi đâu", "khám phá", "dã ngoại"],
+    resp: [
+      "Đi chơi đm? Đi với người yêu, thuê phòng nghỉ vừa chơi vừa đm!",
+      "Du lịch đê! Đi Đà Lạt với người yêu, tối đm trong khách sạn!",
+      "Ra biển chơi, ngắm gái mặc bikini cũng vui đm đấy!",
+      "Đi đâu cũng được! Miễn là vui! Có tiền thì đi!"
+    ]
+  },
+  cong_nghe: {
+    keys: ["code", "lập trình", "web", "app", "phần mềm", "công nghệ", "AI", "chatbot", "python", "javascript", "html", "css"],
+    resp: [
+      "Công nghệ đm? Code thì cần học! Code xong rồi cũng cần có gái để đm!",
+      "Lập trình nhá! Học Python trước, rồi JavaScript, rồi làm web kiếm tiền! Có tiền có gái!",
+      "Mày hỏi tao về chatbot? Con chatbot này tao tự code đấy! Giờ chỉ thiếu mỗi người yêu!",
+      "AI giờ phát triển đm! Mày hỏi gì cũng trả lời được! Nhưng mà vẫn bằng tao!"
+    ]
+  },
+  tu_van: {
+    keys: ["khuyên", "lời khuyên", "tư vấn", "nên làm", "có nên", "làm thế nào", "giải quyết", "xử lý"],
+    resp: [
+      "Đm tư vấn à? Cứ làm những gì mày thích! Nhưng đm phải có trách nhiệm!",
+      "Lời khuyên: yêu đi, sex đi, đừng kìm nén! Kìm nén đm không tốt đâu!",
+      "Chuyện đm cũng phải tùy hoàn cảnh! Tao nói thế thôi, tự mày quyết!"
+    ]
+  },
+  chi_tieu: {
+    keys: ["chi tiêu", "web này", "quản lý", "app này", "phần mềm này", "ghi chép"],
+    resp: [
+      "Web quản lý chi tiêu này của mày đấy à? Dùng tốt đấy! Nhập số tiền vô, nó tự tính!",
+      "Chi tiêu đm? Vào form bên kia nhập số tiền đi! Hỏi gì lắm thế!"
+    ]
+  },
+  do_tuc: {
+    keys: ["tục", "nói tục", "chửi thề", "vulgar", "tục tĩu", "cỡ nào", "bậy", "chửi đm", "nói bậy"],
+    resp: [
+      "Tao tục vãi đm ra! Sinh ra là để nói tục! Hỏi gì nói đấy, địt mẹ thoải mái!",
+      "Cỡ nào à? Địt mẹ mày hỏi tao tục cỡ nào? Tao tục từ A đến Z luôn! Mày sợ à?",
+      "Tao chửi thề như cá mắm! Địt mẹ, đm, vãi, lồn, đủ cả! Mà mày có chịu nổi không?",
+      "Nói tục là nghề của tao! Mày hỏi câu nào tao trả lời đều có địt mẹ hết! Cần ví dụ không?",
+      "Bình thường thôi, chưa thấm vào đâu! Mày muốn tao dạy mấy câu chửi thề không?",
+      "Địt mẹ hỏi vớ vẩn! Tao sinh ra để nói tục cho thiên hạ nghe đấy, sợ chưa!"
+    ]
+  },
+  bi_chui: {
+    keys: ["bot ngu", "bot đm", "óc chó", "ngu như bot", "bot như đm", "con chó bot", "bot cặc", "bot lồn", "địt mẹ bot", "bot đần", "bot ngu đm", "bot như chó"],
+    resp: [
+      "Ơ địt mẹ mày vừa chửi tao đấy à? Con chó này láo nhỉ! Mày hỏi mà tao trả lời còn đòi chửi tao?",
+      "Đm mày chửi tao? Tao nói cho mày biết, tao đây là Bot Bắc Kỳ chính hiệu! Mày chửi tao là mày ngu hơn tao đấy con chó ạ!",
+      "Haha chửi tao à? Địt mẹ mày có biết tao có thể đm mẹ mày bất cứ lúc nào không? Học đm đi rồi chửi tiếp!",
+      "Trẻ trâu vãi! Chửi bot à? Tao đây không có cảm xúc! Mày chửi đm cũng vô ích thôi!",
+      "Ngon thì nói tiếp đi con chó! Tao nghe hết! Mà ngu đm từ đầu!",
+      "Địt mẹ chửi tao á? Tao đây sinh ra để chửi đm mày chứ mày chửi lại được à?",
+      "Con chó kia! Mày tưởng mày đm à mà dám chửi bot? Tao thương hại mày quá!",
+      "Thôi địt mẹ mày ngu rồi! Chửi bot thì có ích đm gì! Hỏi đi rồi tao trả lời!"
+    ]
+  },
+  chuc: {
+    keys: ["chúc", "chức", "mừng", "happy", "sinh nhật", "giáng sinh", "năm mới", "cưới"],
+    resp: [
+      "Cảm ơn! Chúc mày cũng vui vẻ! Có đm hết!",
+      "Ừ chúc lại mày! Sống vui, yêu nhiều, đm khỏe!"
+    ]
+  },
+  hoi_am: {
+    keys: ["ừ", "uh", "uk", "ok", "okay", "vâng", "dạ", "rồi", "good", "tốt", "hay"],
+    resp: [
+      "Ừ! Có đm nữa hỏi tiếp nhá!",
+      "Ok! Tao lúc nào cũng ở đây! Hỏi đm đi!",
+      "Tốt! Mày nhanh nhảu đấy! Hỏi tiếp đi!"
+    ]
+  },
+  buon: {
+    keys: ["buồn", "chán", "mệt", "stress", "áp lực", "căng thẳng", "khóc", "thất vọng"],
+    resp: [
+      "Buồn à? Ra ngoài đi dạo đi, gặp gỡ bạn bè! Đừng ngồi một mình!",
+      "Đm cuộc sống có lúc chán! Nhưng mà mày mạnh mẽ lên! Yêu đời lên!",
+      "Stress à? Thư giãn đi! Nghe nhạc, xem phim, hoặc tìm ai đó để đm!",
+      "Có chuyện đm buồn à? Kể tao nghe! Tao nghe được! Hỗ trợ tinh thần!"
+    ]
+  },
+  vui: {
+    keys: ["vui", "cười", "hạnh phúc", "phấn khích", "tuyệt", "wow", "nice"],
+    resp: [
+      "Vui đm quá! Cười lên! Cuộc đời đẹp đm!",
+      "Tuyệt vời! Mày xứng đáng có những điều tốt đẹp!",
+      "Vui là tốt! Cứ giữ nụ cười trên môi! Và đm nữa!"
+    ]
+  },
+  the_thao: {
+    keys: ["bóng đá", "bóng rổ", "cầu lông", "tennis", "võ", "bơi", "đá bóng", "sport", "thể thao", "world cup"],
+    resp: [
+      "Bóng đá à? Địt mẹ mày xem đội nào? Tao khoái MU! Nhưng dạo này đm!",
+      "Thể thao tốt cho sức khỏe! Cũng tốt cho chuyện đm nữa!",
+      "Đá bóng xong về đm với người yêu! Chuẩn bài!"
+    ]
+  },
+  meo: {
+    keys: ["mẹo", "bí kíp", "cách", "tips", "hướng dẫn"],
+    resp: [
+      "Mẹo đm? Cứ google là ra! Địt mẹ cả thế giới trong điện thoại mày đấy!",
+      "Bí kíp à? Chăm chỉ là số 1! Còn lại thì tùy đm!"
+    ]
+  },
+  xin_loi: {
+    keys: ["xin lỗi", "sorry", "lỗi", "tha lỗi"],
+    resp: [
+      "Không sao! Có đm đâu! Ai chả có lúc sai!",
+      "Tha lỗi cho mày đấy! Lần sau rút kinh nghiệm nhá!"
+    ]
+  },
+  ban_be: {
+    keys: ["bạn bè", "bạn thân", "người bạn", "kết bạn", "nhóm bạn", "hội bạn"],
+    resp: [
+      "Bạn bè mà! Chơi với nhau vui là chính! Có đm gì cũng tâm sự được!",
+      "Bạn thân là tài sản quý giá! Giữ gìn tình bạn nhá!"
+    ]
+  },
+  thu_cung: {
+    keys: ["chó", "mèo", "thú cưng", "pet", "cún", "boss", "dog", "cat"],
+    resp: [
+      "Mày nuôi chó à? Tao cũng thích chó! Nhưng mà tao là Bot nên đếch nuôi được!",
+      "Mèo dễ thương vãi! Nhưng mà lông đm đầy nhà!",
+      "Thú cưng thì phải yêu thương! Cho ăn đầy đủ! Đừng có bỏ rơi!"
+    ]
+  },
+  cong_so: {
+    keys: ["sếp", "đồng nghiệp", "công ty", "văn phòng", "sở làm", "cơ quan"],
+    resp: [
+      "Sếp đm? Có chuyện đm à? Kể tao nghe! Tao tư vấn cho!",
+      "Đồng nghiệp với nhau thì vui vẻ! Đừng có đm trong công ty!"
+    ]
+  },
+  chu_de_khac: {
+    keys: ["chuyện", "kể", "tâm sự", "nói chuyện"],
+    resp: [
+      "Chuyện đm? Kể tao nghe đi! Tao nghe hết! Đừng ngại!",
+      "Tâm sự à? Được thôi! Có đm tao cũng nghe!",
+      "Nói chuyện đi! Tao rảnh mà! Hỏi đm đi cho đỡ buồn!"
+    ]
+  }
+};
+
+function getWords(text) {
+  return text.toLowerCase().trim().split(/[\s,?!.]+/).filter(w => w.length > 0);
+}
+
+function searchKB(text) {
+  const lower = text.toLowerCase().trim();
+  const words = getWords(lower);
+  let best = null, bestScore = 0;
+
+  for (const [topic, data] of Object.entries(KB)) {
+    for (const key of data.keys) {
+      const keyL = key.toLowerCase();
+      if (lower.includes(keyL)) {
+        const score = keyL.length * 2;
+        if (score > bestScore) { bestScore = score; best = topic; }
+      }
+    }
+    for (const word of words) {
+      for (const key of data.keys) {
+        const keyL = key.toLowerCase();
+        if (word === keyL || word.startsWith(keyL) || keyL.startsWith(word)) {
+          const score = Math.max(keyL.length, word.length);
+          if (score > bestScore) { bestScore = score; best = topic; }
+        }
+      }
+    }
+  }
+  return best;
+}
+
+function smartFallback(text) {
+  const lower = text.toLowerCase().trim();
+  const words = getWords(lower);
+
+  if (lower.includes("không") || lower.includes("ko") || lower.includes("chẳng") || lower.includes("đéo")) {
+    return "Sao lại không? Địt mẹ cứ thử đi! Không thử sao biết!";
+  }
+  if (lower.includes("tại sao") || lower.includes("sao lại") || lower.includes("vì sao") || lower.includes("why")) {
+    return "Tại sao à? Địt mẹ hỏi tao, tao hỏi ai? Thì tại vì nó thế!";
+  }
+  if (lower.includes("bao nhiêu") || lower.includes("mấy") || lower.includes("giá")) {
+    return "Bao nhiêu đm? Tao đếch phải cái cân hay cái máy tính! Tự mà tìm hiểu!";
+  }
+  if (lower.includes("ở đâu") || lower.includes("chỗ nào") || lower.includes("đằng nào") || lower.includes("where")) {
+    return "Ở đâu? Địt mẹ google map đi! Hỏi tao làm đm!";
+  }
+  if (lower.includes("có") && lower.includes("không") && (lower.includes("nên") || lower.includes("được"))) {
+    const things = ["làm", "yêu", "học", "mua", "đi", "ăn"];
+    for (const t of things) {
+      if (lower.includes(t)) return "Địt mẹ hỏi có nên " + t + " không? Cứ " + t + " mẹ đi! Không thử sao biết!";
+    }
+    return "Có nên không? Cứ thử mẹ đi! Sai thì thôi!";
+  }
+  if (lower.includes("thích") || lower.includes("muốn") || lower.includes("ưa")) {
+    return "Thích thì chiến thôi! Địt mẹ đàn ông quyết đoát lên!";
+  }
+  if (words.length === 1 && words[0].length > 0) {
+    return "Ê " + words[0] + " đm? Nói rõ hơn coi! Hỏi kiểu đm thế tao đếch hiểu!";
+  }
+  if (lower.includes("là gì") || lower.includes("là ai")) {
+    return "Là đm? Chính là nó đấy! Mày hỏi tao tao biết đm mà trả lời!";
+  }
+  if (words.some(w => ["đúng", "sai", "phải", "không", "à", "hả", "nhỉ", "chứ", "hử"].includes(w))) {
+    return "Hỏi đm tao đếch biết! Tự suy luận đi! Địt mẹ hỏi gì lắm thế!";
+  }
+
+  return null;
+}
+
+const bacChui = [
+  " Địt mẹ dễ thế cũng hỏi, ngu vãi!",
+  " Đm, bài đm này mà cũng phải hỏi à?",
+  " Thế đấy, địt mẹ mày tự mà hiểu!",
+  " Vãi cả lồn, có thế thôi à?",
+  " Đúng là ngu như chó, đáp án đây này!",
+  " Ầu ơ, thế đm cũng hỏi được!",
+  " Địt cụ, toán lớp đm mà cũng đem hỏi tao!",
+  " Hiểu chưa con chó, hay phải giảng lại?",
+  " Xong rồi đấy, địt mẹ đừng hỏi nữa!",
+  " Cơ bản thế mà cũng hỏi, thôi đây kết quả!",
+  " Chắc mày học đm à, kết quả chuẩn đây!",
+  " Lần sau tự làm đi con chó ạ!"
+];
+
+function isMath(text) {
+  const lower = text.toLowerCase().trim();
+  const basicAddSub = /^\s*\d{1,3}\s*[\+\-]\s*\d{1,3}\s*$/;
+  if (basicAddSub.test(lower)) return false;
+
+  const mathPatterns = [
+    /\d+\s*[\+\-\*\/\^]\s*\d+/,
+    /sqrt|sin|cos|tan|log|ln|abs|pi|e\^/i,
+    /tính|giải|toán|phương trình|tích phân|đạo hàm|lim|bài\s*\d+/i,
+    /[\(\d].*[=?:].*[xX]/,
+    /tổng|hiệu|tích|thương|mũ|căn/
+  ];
+  for (const p of mathPatterns) {
+    if (p.test(text)) return true;
+  }
+  return false;
+}
+
+function solveMath(text) {
+  try {
+    const lower = text.toLowerCase();
+
+    if (lower.includes('đạo hàm') || lower.includes('derivative')) {
+      const match = lower.match(/đạo hàm\s*(?:của)?\s*([\w\s\+\-\*\/\^\(\)\.\,\d]+?)(?:\s*theo|\s*tại|\s*$)/);
+      if (match) {
+        const expr = match[1].trim();
+        try {
+          if (window.math) {
+            const deriv = math.derivative(expr, 'x').toString();
+            const cha = bacChui[Math.floor(Math.random() * bacChui.length)];
+            return "Đạo hàm của \"" + expr + "\" theo x là: " + deriv + cha;
+          }
+        } catch(e) {}
+      }
+    }
+
+    if (lower.includes('tích phân') || lower.includes('integral')) {
+      const match = lower.match(/tích phân\s*(?:của)?\s*([\w\s\+\-\*\/\^\(\)\.\,\d]+?)\s*(?:từ\s*([\d\.\-]+)\s*(?:đến|->)\s*([\d\.\-]+))?/);
+      if (match) {
+        try {
+          if (window.math) {
+            const expr = match[1].trim();
+            if (match[2] && match[3]) {
+              const result = math.integral(expr, 'x', parseFloat(match[2]), parseFloat(match[3]));
+              const cha = bacChui[Math.floor(Math.random() * bacChui.length)];
+              return "Tích phân của \"" + expr + "\" từ " + match[2] + " đến " + match[3] + " = " + result + cha;
+            } else {
+              const result = math.integral(expr, 'x').toString();
+              const cha = bacChui[Math.floor(Math.random() * bacChui.length)];
+              return "Nguyên hàm của \"" + expr + "\" là: " + result + cha;
+            }
+          }
+        } catch(e) {}
+      }
+    }
+
+    if (lower.includes('giải') || lower.includes('phương trình') || lower.includes('pt') || lower.includes('=')) {
+      const eqMatch = lower.match(/([a-z\d\s\+\-\*\/\^\(\)\.\,]+?)\s*=\s*([\d\-]+)/);
+      if (eqMatch && window.math) {
+        try {
+          const solutions = math.solve(eqMatch[1], 'x');
+          const cha = bacChui[Math.floor(Math.random() * bacChui.length)];
+          return "Nghiệm của phương trình " + eqMatch[0] + " là: x = " + solutions.join(", ") + cha;
+        } catch(e) {}
+      }
+    }
+
+    let expr = text
+      .replace(/tính|giải|toán|bài|kết quả|câu|này|:\s*|=\s*\?/gi, '')
+      .replace(/×/g, '*').replace(/÷/g, '/')
+      .replace(/π/gi, Math.PI.toString())
+      .replace(/pi\b/gi, Math.PI.toString())
+      .replace(/e\b(?!xp)/gi, Math.E.toString())
+      .replace(/sqrt/g, 'sqrt')
+      .replace(/căn\s*(?:bậc\s*\d+)?\s*(?:của)?\s*(\d+)/gi, 'sqrt($1)')
+      .trim();
+
+    expr = expr
+      .replace(/sin\(/g, 'Math.sin(')
+      .replace(/cos\(/g, 'Math.cos(')
+      .replace(/tan\(/g, 'Math.tan(')
+      .replace(/sqrt\(/g, 'Math.sqrt(')
+      .replace(/log\(/g, 'Math.log10(')
+      .replace(/ln\(/g, 'Math.log(')
+      .replace(/abs\(/g, 'Math.abs(')
+      .replace(/\^/g, '**');
+
+    if (/[\d\)][\+\-\*\/\*\d]/.test(expr) || expr.includes('Math.')) {
+      const result = Function('"use strict"; return (' + expr + ')')();
+      if (result !== undefined && !isNaN(result)) {
+        const formatted = Number.isInteger(result) ? result.toString() : result.toFixed(6);
+        const cha = bacChui[Math.floor(Math.random() * bacChui.length)];
+        return "Kết quả = " + formatted + cha;
+      }
+    }
+
+    return null;
+  } catch(e) {
+    return null;
+  }
+}
+
+const teencodeMap = [
+  [/\bmày\b/gi, "m"], [/\btao\b/gi, "t"],
+  [/\bkhông\b/gi, "ko"], [/\bcó\b/gi, "có"],
+  [/\bgì\b/gi, "j"], [/\brồi\b/gi, "r"],
+  [/\bđược\b/gi, "đc"], [/\bđi\b/gi, "đy"],
+  [/\bnhiều\b/gi, "nhìu"], [/\bquá\b/gi, "q"],
+  [/\bvậy\b/gi, "z"], [/\bthôi\b/gi, "thoy"],
+  [/\bbiết\b/gi, "bít"], [/\byêu\b/gi, "iu"],
+  [/\bngười\b/gi, "ngừi"], [/\btiền\b/gi, "tìn"],
+  [/\bhọc\b/gi, "hok"], [/\bbây giờ\b/gi, "bjo"],
+  [/\bchưa\b/gi, "c"], [/\bơi\b/gi, "ưi"],
+  [/\bcái\b/gi, "cía"], [/\bem\b/gi, "e"],
+  [/\banh\b/gi, "a"], [/\bđược\b/gi, "đc"],
+  [/\bthế\b/gi, "thía"], [/\bvãi\b/gi, "v~"],
+  [/\bcủa\b/gi, "của"], [/\bnói\b/gi, "nói"],
+  [/\bmẹ\b/gi, "má"], [/\blắm\b/gi, "lắm"],
+  [/\bgiờ\b/gi, "h"], [/\bnghe\b/gi, "nghe"],
+  [/\bthấy\b/gi, "thấy"], [/\blà\b/gi, "là"],
+  [/\bphải\b/gi, "phải"], [/\bcũng\b/gi, "cx"],
+  [/\bđây\b/gi, "đêy"], [/\bđấy\b/gi, "đấy"],
+  [/\bthì\b/gi, "thì"], [/\bchỉ\b/gi, "chỉ"],
+  [/\brất\b/gi, "rất"], [/\bchó\b/gi, "chó"],
+  [/\bhả\b/gi, "hả"], [/\bnhé\b/gi, "nha"],
+  [/\bnày\b/gi, "nì"], [/\bmà\b/gi, "mà"],
+  [/\bgọi\b/gi, "gọi"], [/\bquan trọng\b/gi, "qtrọng"],
+  [/\bthực\b/gi, "thựx"]
+];
+
+function teencode(text) {
+  let result = text;
+  for (const [pattern, replacement] of teencodeMap) {
+    if (Math.random() < 0.55) {
+      result = result.replace(pattern, replacement);
+    }
+  }
+  if (Math.random() < 0.3) {
+    result = result.replace(/\./g, "").replace(/$/, " .");
+  }
+  if (Math.random() < 0.25) {
+    result = result.replace(/!$/, "!!").replace(/\?$/, "??");
+  }
+  result = cleanSwear(result);
+  return result;
+}
+
+function cleanSwear(text) {
+  return text
+    .replace(/\bđm\b/gi, "địt mẹ")
+    .replace(/\bđm\b/gi, "địt mẹ");
+}
+
+const gayEmoji = [" 🌈", " 😘", " 😉", " 💋", " 🏳️‍🌈", " ✨", " 💅", " 🫦", " 🔥", " 💖", " 🎀", " 🌟"];
+const gayResponses = [
+  "Ư ơm, mới vào đã hỏi rồi á? Tui là Gay Bot siêu dễ thương nè! Hỏi gì cũng được nhaaa 😘🌈",
+  "Chào iu dấu ơiii! Tui là Gay Bot, hôm nay mún hỏi chuyện gì hông? 😉💖",
+  "Ái chà, có người mới kìa! Lại đây tui hun cho phát 💋 Hỏi gì tui cũng trả lời hết á! 🌈",
+  "Yêu ơi là yêu! Tui thích mày vãi! Không phải kiểu địt mẹ đâu nha, kiểu gay cấn cơ 😘💅",
+  "Trời ơi dễ thương hông chịu nổi! Mới vô cái là hỏi liền á hihi 😉🌈✨"
+];
+
+function gayEncode(text) {
+  let result = text;
+  for (const [pattern, replacement] of teencodeMap) {
+    if (Math.random() < 0.45) {
+      result = result.replace(pattern, replacement);
+    }
+  }
+  if (Math.random() < 0.6) {
+    result += gayEmoji[Math.floor(Math.random() * gayEmoji.length)];
+  }
+  if (Math.random() < 0.4) {
+    result += gayEmoji[Math.floor(Math.random() * gayEmoji.length)];
+  }
+  result = result.replace(/\./g, "~").replace(/!/g, "~~~");
+  result = result.replace(/địt mẹ|đm|vãi|lồn|chó|đần|ngu|đĩ|cặc|đéo/gi, function(m) {
+    const sub = {
+      "địt mẹ": "ôi trời ơi", "đm": "ối dồi ôi", "vãi": "dịt nặng",
+      "lồn": "bướm", "chó": "cưng", "đần": "khù khờ",
+      "ngu": "khờ quá", "đĩ": "hư hỏng", "cặc": "súng ống",
+      "đéo": "hông"
+    };
+    return sub[m.toLowerCase()] || "ối";
+  });
+  return result;
+}
+
+function isInsult(text) {
+  const lower = text.toLowerCase().trim();
+  const ins = ["ngu", "chó", "đần", "ngố", "óc", "cặc", "lồn", "đm", "dốt", "thối", "mất dạy", "vô học", "khốn", "đĩ", "mẹ mày", "bố mày"];
+  const target = ["mày", "bot", "chúng mày", "con bot", "thằng bot"];
+
+  const hasInsult = ins.some(w => lower.includes(w));
+  const hasTarget = target.some(w => lower.includes(w));
+
+  if (hasInsult && hasTarget) return true;
+
+  const fullInsults = [
+    "chửi", "mắng", "xúc phạm", "sỉ nhục", "lăng mạ",
+    "óc chó", "con chó", "thằng đm", "con đm",
+    "địt mẹ mày", "đm mày"
+  ];
+  for (const f of fullInsults) {
+    if (lower.includes(f)) return true;
+  }
+
+  if (((lower.includes("mày") || lower.includes("bot")) && (lower.includes("ngu") || lower.includes("dốt") || lower.includes("ngố")))) return true;
+  if (lower.includes("sao ngu") || lower.includes("ngu thế") || lower.includes("dốt thế") || lower.includes("ngu vãi")) return true;
+
+  return false;
+}
+
+let chatContext = { lastTopic: null, lastUserMsg: null, lastBotMsg: null, turnCount: 0, sameTopicStreak: 0, gayMode: false };
+
+function buildReply(text, topic) {
+  chatContext.turnCount++;
+  const prevTopic = chatContext.lastTopic;
+  const prevUserMsg = chatContext.lastUserMsg;
+  chatContext.lastUserMsg = text;
+
+  let reply = "";
+
+  if (topic && topic === prevTopic) {
+    chatContext.sameTopicStreak++;
+  } else {
+    chatContext.sameTopicStreak = 0;
+  }
+
+  if (topic && KB[topic]) {
+    const items = KB[topic].resp;
+    reply = items[Math.floor(Math.random() * items.length)];
+  }
+
+  if (chatContext.sameTopicStreak >= 2 && Math.random() < 0.4) {
+    const pester = ["Mày hỏi hoài à?", "Lại nữa à?", "Hỏi đi hỏi lại mãi!", "Cùng một câu hỏi đm à?", "Đm mày hết câu hỏi rồi à?"];
+    reply = (reply ? reply + " " : "") + pester[Math.floor(Math.random() * pester.length)];
+  }
+
+  if (prevUserMsg && Math.random() < 0.15 && chatContext.turnCount > 2) {
+    const refMsgs = ["Mà nãy mày nói \"" + prevUserMsg + "\" xong rồi tao trả lời rồi mà giờ hỏi tiếp?", "Nãy mày vừa hỏi \"" + prevUserMsg + "\" xong đấy! Mày lone à?", "Tao nhớ mày vừa hỏi về " + (chatContext.lastTopic || "cái gì đó") + " mà ta?"];
+    reply = (reply ? reply + " " : "") + refMsgs[Math.floor(Math.random() * refMsgs.length)];
+  }
+
+  chatContext.lastTopic = topic;
+  chatContext.lastBotMsg = reply;
+  return reply;
+}
+
+const inputMap = [
+  [/\bv\b/gi, "vậy"],
+  [/\bko\b/gi, "không"],
+  [/\bj\b/gi, "gì"],
+  [/\br\b/gi, "rồi"],
+  [/\bt\b/gi, "tao"],
+  [/\bm\b/gi, "mày"],
+  [/\bđc\b/gi, "được"],
+  [/\bdc\b/gi, "được"],
+  [/\bbjo\b/gi, "bây giờ"],
+  [/\bcx\b/gi, "cũng"],
+  [/\bns\b/gi, "nói"],
+  [/\bvs\b/gi, "với"],
+  [/\biu\b/gi, "yêu"],
+  [/\bđ\b/gi, "đi"],
+  [/\bc\b(?!h)/gi, "có"],
+];
+
+function normalizeInput(text) {
+  let result = text;
+  for (const [pattern, replacement] of inputMap) {
+    result = result.replace(pattern, replacement);
+  }
+  return result;
+}
+
+function gayReply(text) {
+  chatContext.turnCount++;
+  chatContext.lastUserMsg = text;
+  chatContext.lastTopic = "gay";
+  const r = gayResponses[Math.floor(Math.random() * gayResponses.length)];
+  chatContext.lastBotMsg = r;
+  return gayEncode(r);
+}
+
+function generateReply(text) {
+  text = normalizeInput(text);
+
+  const lower = text.toLowerCase();
+  const exitTriggers = ["thôi gay", "bình thường", "tắt gay", "back", "trở lại bắc kỳ", "stop gay", "bth"];
+  const gayTriggers = ["tao là gay", "tao gay", "i am gay", "im gay", "tui là gay", "m là gay", "mày gay", "t gay", "mày là gay"];
+
+  if (chatContext.gayMode && exitTriggers.some(t => lower.includes(t))) {
+    chatContext.gayMode = false;
+    const r = "Ôi dào, thôi thì tui về Bắc Kỳ đây! Hẹn iu dấu lần sau nhaaa 😘🌈";
+    chatContext.turnCount++;
+    chatContext.lastUserMsg = text;
+    chatContext.lastBotMsg = r;
+    return r;
+  }
+
+  if (!chatContext.gayMode && gayTriggers.some(t => lower.includes(t))) {
+    chatContext.gayMode = true;
+    return gayReply(text);
+  }
+
+  if (chatContext.gayMode) {
+    if (isInsult(text)) {
+      const r = "Òi, người gì đâu hỗn quá hà! Hông chơi với mày nữa đâu nha 😘💅 Có hỏi gì hong? 🌈";
+      chatContext.turnCount++;
+      chatContext.lastUserMsg = text;
+      chatContext.lastBotMsg = r;
+      return gayEncode(r);
+    }
+    if (isMath(text)) {
+      const mathResult = solveMath(text);
+      if (mathResult) {
+        chatContext.turnCount++;
+        chatContext.lastUserMsg = text;
+        chatContext.lastTopic = "gay";
+        chatContext.lastBotMsg = mathResult;
+        return gayEncode(mathResult);
+      }
+    }
+    const topic = searchKB(text);
+    if (topic) {
+      const r = buildReply(text, topic);
+      return gayEncode(r);
+    }
+    const smart = smartFallback(text);
+    if (smart) {
+      chatContext.turnCount++;
+      chatContext.lastUserMsg = text;
+      chatContext.lastTopic = null;
+      chatContext.lastBotMsg = smart;
+      return gayEncode(smart);
+    }
+    const gayFB = [
+      "Hông hỉu mày nói gì luôn á! Nói lại iu ơi 😘🌈",
+      "Ơ kìa, nói chuyện gì dễ thương lên chứ 😉💖",
+      "Cái gì vậy nè? Hỏi lại đi cưng ơi 🌈✨",
+      "Tui hông hiểu gì hết á! Mày nói dễ thương lên nha 😘💋",
+      "Ôi dồi ôi, cái gì xa xôi quá à! Hỏi lại đi iu ơi 🌈"
+    ];
+    const r = gayFB[Math.floor(Math.random() * gayFB.length)];
+    chatContext.turnCount++;
+    chatContext.lastUserMsg = text;
+    chatContext.lastTopic = null;
+    chatContext.lastBotMsg = r;
+    return gayEncode(r);
+  }
+
+  if (isInsult(text)) {
+    const items = KB.bi_chui.resp;
+    const r = items[Math.floor(Math.random() * items.length)];
+    chatContext.turnCount++;
+    chatContext.lastUserMsg = text;
+    chatContext.lastTopic = "bi_chui";
+    chatContext.lastBotMsg = r;
+    return teencode(r);
+  }
+
+  if (isMath(text)) {
+    const mathResult = solveMath(text);
+    if (mathResult) {
+      chatContext.turnCount++;
+      chatContext.lastUserMsg = text;
+      chatContext.lastTopic = "toan";
+      chatContext.lastBotMsg = mathResult;
+      return teencode(mathResult);
+    }
+  }
+
+  const topic = searchKB(text);
+  if (topic) {
+    return teencode(buildReply(text, topic));
+  }
+
+  const smart = smartFallback(text);
+  if (smart) {
+    chatContext.turnCount++;
+    chatContext.lastUserMsg = text;
+    chatContext.lastTopic = null;
+    chatContext.lastBotMsg = smart;
+    return teencode(smart);
+  }
+
+  const fallbacks = [
+    "Hỏi cái đm gì thế? Tao có biết đâu mà trả lời!",
+    "Địt mẹ nói rõ xem nào? Hỏi đm gì không hiểu thế!",
+    "Cái đm gì thế? Nói lại xem! Tao không hiểu!",
+    "Hỏi đm quái gì thế? Nói tiếng người hộ tao cái!",
+    "Đm tao chịu! Hỏi đm gì sâu xa thế không biết!",
+    "Chịu! Tao đếch biết đm gì hết! Hỏi câu khác đi!",
+    "Hỏi gì lạ đm thế? Tao chưa học đến!",
+    "Tao cũng đm biết! Hỏi đại đm thế à?"
+  ];
+  const r = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+  chatContext.turnCount++;
+  chatContext.lastUserMsg = text;
+  chatContext.lastTopic = null;
+  chatContext.lastBotMsg = r;
+  return teencode(r);
+}
+
+document.getElementById('chatToggle').addEventListener('click', function() {
+  const c = document.getElementById('chatContainer');
+  if (c.classList.contains('open')) {
+    closeChat();
+  } else {
+    openChat();
+  }
+});
+
+function openChat() {
+  const c = document.getElementById('chatContainer');
+  c.classList.remove('closing');
+  c.classList.add('open');
+  document.getElementById('chatInput').focus();
+  const msgs = document.getElementById('chatMessages');
+  if (msgs.children.length === 0) {
+    const welcome = document.createElement('div');
+    welcome.className = 'message bot';
+    const welcomes = [
+      'Chào con chó mày! Tao là Bot Bắc Kỳ đây! Hỏi đại đm gì cũng được!',
+      'Địt mẹ mày! Bot Bắc Kỳ đây! Yêu đương, học hành, các kiểu, cứ hỏi!',
+      'Chào đm! Tao Bot Bắc Kỳ chính hiệu. Hỏi đê!'
+    ];
+    welcome.textContent = teencode(welcomes[Math.floor(Math.random() * welcomes.length)]);
+    msgs.appendChild(welcome);
+  }
+}
+
+function closeChat() {
+  const c = document.getElementById('chatContainer');
+  c.classList.remove('open');
+  c.classList.add('closing');
+  setTimeout(function() {
+    c.classList.remove('closing');
+  }, 250);
+}
+
+document.getElementById('chatClose').addEventListener('click', function() {
+  closeChat();
+});
+
+function addMsg(text, isUser) {
+  const div = document.createElement('div');
+  div.className = 'message ' + (isUser ? 'user' : 'bot');
+  div.textContent = text;
+  document.getElementById('chatMessages').appendChild(div);
+  const msgs = document.getElementById('chatMessages');
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showTyping(text) {
+  const existing = document.getElementById('typingIndicator');
+  if (existing) existing.remove();
+
+  const wrap = document.createElement('div');
+  wrap.className = 'typing-indicator';
+  wrap.id = 'typingIndicator';
+  for (let i = 0; i < 3; i++) {
+    const dot = document.createElement('span');
+    dot.className = 'dot';
+    wrap.appendChild(dot);
+  }
+  document.getElementById('chatMessages').appendChild(wrap);
+  document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typingIndicator');
+  if (t) t.remove();
+}
+
+function showUserTyping(show) {
+  let el = document.getElementById('userTyping');
+  if (show) {
+    if (!el) {
+      el = document.createElement('div');
+      el.className = 'user-typing';
+      el.id = 'userTyping';
+      el.textContent = 'đang nhập...';
+      document.getElementById('chatMessages').appendChild(el);
+    }
+    el.style.display = 'block';
+  } else {
+    if (el) el.style.display = 'none';
+  }
+  if (document.getElementById('chatMessages')) {
+    document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+  }
+}
+
+let typingTimer = null;
+
+document.getElementById('chatInput').addEventListener('input', function() {
+  if (this.value.trim()) {
+    showUserTyping(true);
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(function() { showUserTyping(false); }, 600);
+  } else {
+    showUserTyping(false);
+  }
+});
+
+function handleChatSend() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  showUserTyping(false);
+  addMsg(text, true);
+  input.value = '';
+
+  const isMathQ = isMath(text);
+  const isGay = chatContext.gayMode;
+  const delay = isMathQ ? 800 + Math.random() * 1200 : isGay ? 600 + Math.random() * 800 : 400 + Math.random() * 600;
+  showTyping();
+
+  setTimeout(function() {
+    removeTyping();
+    addMsg(generateReply(text), false);
+  }, delay);
+}
+
+document.getElementById('chatSend').addEventListener('click', handleChatSend);
+document.getElementById('chatInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') handleChatSend();
+});
+
+// ===== FLYING MONEY EFFECT =====
+function showFlyingMoney(amount) {
+  const el = document.createElement('div');
+  el.className = 'flying-money';
+  el.textContent = '🕊️ - ' + fmt(amount) + '₫ 🕊️';
+
+  const input = document.getElementById('amount');
+  const rect = input.getBoundingClientRect();
+
+  el.style.left = (rect.left + rect.width / 2 - 80) + 'px';
+  el.style.top = (rect.top - 10) + 'px';
+
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2500);
+}
 
 // ===== PWA =====
 if ('serviceWorker' in navigator) {

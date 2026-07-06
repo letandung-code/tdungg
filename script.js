@@ -22,8 +22,8 @@ function fmt(n) {
 function getWeek(date) {
   const d = new Date(date);
   const start = new Date(d.getFullYear(), d.getMonth(), 1);
-  const day = start.getDay();
-  const diff = d.getDate() + day - 1;
+  const day = start.getDay() || 7;
+  const diff = d.getDate() + day - 2;
   return Math.floor(diff / 7) + 1;
 }
 
@@ -37,7 +37,9 @@ function isToday(d) {
 function isThisWeek(d) {
   const t = new Date();
   const startOfWeek = new Date(t);
-  startOfWeek.setDate(t.getDate() - t.getDay());
+  const day = t.getDay();
+  const diff = day === 0 ? 6 : day - 1;
+  startOfWeek.setDate(t.getDate() - diff);
   startOfWeek.setHours(0,0,0,0);
   return d >= startOfWeek;
 }
